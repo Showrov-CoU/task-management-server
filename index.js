@@ -42,6 +42,12 @@ dbConnect();
 const database = client.db("TodoDB");
 const todolist = database.collection("todo");
 
+app.get("/todo", async (req, res) => {
+  const data = await todolist.find();
+  const result = await data.toArray();
+  res.send(result);
+});
+
 app.post("/todo", async (req, res) => {
   const data = req.body;
   const defaultField = {
@@ -49,6 +55,30 @@ app.post("/todo", async (req, res) => {
   };
   const finalData = { ...data, ...defaultField };
   const result = await todolist.insertOne(finalData);
+  res.send(result);
+});
+
+app.patch("/todo/:id", async (req, res) => {
+  const id = req.params.id;
+  const updateTask = req.body;
+  const query = { _id: new ObjectId(id) };
+  const options = { upsert: true };
+  const task = {
+    $set: {
+      title: updateTask.title,
+      priority: updateTask.priority,
+      desc: updateTask.desc,
+      date: updateTask.date,
+    },
+  };
+  const result = await todolist.updateOne(query, task, options);
+  res.send(result);
+});
+
+app.delete("/todo/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await todolist.deleteOne(query);
   res.send(result);
 });
 
